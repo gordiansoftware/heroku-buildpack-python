@@ -328,6 +328,8 @@ mtime "collectstatic.time" "${start}"
 
 # Set the PATH to include Python / pip / pipenv / poetry / etc.
 set_env PATH "\$HOME/.heroku/python/bin:\$PATH"
+# Tell environment where to find poetry executable.
+set_env POETRY "\$HOME/.heroku/python/bin/poetry"
 # Tell Python to run in unbuffered mode.
 set_env PYTHONUNBUFFERED true
 # Tell Python where it lives.
