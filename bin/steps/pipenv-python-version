@@ -14,7 +14,6 @@ if [[ -f $BUILD_DIR/Pipfile ]]; then
             PYTHON_VERSION_SOURCE='Pipfile.lock'
             set +e
             PYTHON=$(jq -r '._meta.requires.python_full_version' "$BUILD_DIR/Pipfile.lock")
-            puts-step "poetry.lock shows python version: $PYTHON"
             if [[ "$PYTHON" != "null" ]]; then
                 echo "python-$PYTHON" > "$BUILD_DIR/runtime.txt"
             fi

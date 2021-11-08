@@ -45,7 +45,11 @@ if [ ! "$SKIP_POETRY_INSTALL" ]; then
         POETRY_VERSION='1.1.11'
 
         # Install poetry.
-        /app/.heroku/python/bin/pip install "poetry==${PIPENV_VERSION}" --upgrade --upgrade-strategy only-if-needed &> /dev/null
+        puts-step "Installing poetry ${POETRY_VERSION}"
+        echo "/app/.heroku/python/bin/pip install 'poetry==${POETRY_VERSION}' --upgrade --upgrade-strategy only-if-needed &> /dev/null"
+        /app/.heroku/python/bin/pip install "poetry==${POETRY_VERSION}" --upgrade --upgrade-strategy only-if-needed
+
+        /app/.heroku/python/bin/poetry --version
 
         # Install the test dependencies, for CI.
         if [ "$INSTALL_TEST" ]; then
