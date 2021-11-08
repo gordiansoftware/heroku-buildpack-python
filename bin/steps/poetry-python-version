@@ -14,7 +14,7 @@ if [[ -f $BUILD_DIR/pyproject.toml ]]; then
             PYTHON_VERSION_SOURCE='poetry.lock'
             set +e
 
-            PYTHON="$(sed -n -e '/^\[metadata\]/,/^\[/p' $BUILD_DIR/poetry.lock | sed -n -e 's/^python-versions\s*=\s*//p' | tr -d \"\')"
+            PYTHON="$(sed -n -e '/^\[metadata\]/,/^\[/p' $BUILD_DIR/poetry.lock | sed -n -e 's/^buildpack-python-versions\s*=\s*//p' | tr -d \"\')"
             puts-step "poetry.lock shows python version: $PYTHON"
             if [[ "$PYTHON" != "null" ]]; then
                 echo "python-$PYTHON" > "$BUILD_DIR/runtime.txt"
@@ -22,7 +22,7 @@ if [[ -f $BUILD_DIR/pyproject.toml ]]; then
             set -e
 
             if [[ "$PYTHON" == "null" ]]; then
-                PYTHON="$(sed -n -e '/^\[metadata\]/,/^\[/p' $BUILD_DIR/poetry.lock | sed -n -e 's/^python-versions\s*=\s*//p' | tr -d \"\')"
+                PYTHON="$(sed -n -e '/^\[metadata\]/,/^\[/p' $BUILD_DIR/poetry.lock | sed -n -e 's/^buildpack-python-versions\s*=\s*//p' | tr -d \"\')"
                 if [ "$PYTHON" = 2.7 ]; then
                     echo "$LATEST_27" > "$BUILD_DIR/runtime.txt"
                 fi
