@@ -54,7 +54,7 @@ if [ ! "$SKIP_POETRY_INSTALL" ]; then
         # Install the test dependencies, for CI.
         if [ "$INSTALL_TEST" ]; then
             puts-step "Installing test dependencies"
-            /app/.heroku/python/bin/poetry install --with-dev 2>&1 | cleanup | indent
+            /app/.heroku/python/bin/poetry install 2>&1 | cleanup | indent
 
         # Install the dependencies.
         elif [[ ! -f poetry.lock ]]; then
