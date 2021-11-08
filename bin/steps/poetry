@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+
+# export CLINT_FORCE_COLOR=1
+# export PIPENV_FORCE_COLOR=1
+# shellcheck source=bin/utils
+source "$BIN_DIR/utils"
+set -e
+
+if [[ -f poetry.lock ]]; then
+    if [[ -f .heroku/python/poetry.lock.sha256 ]]; then
+        if [[ $(openssl dgst -sha256 poetry.lock) == $(cat .heroku/python/poetry.lock.sha256) ]]; then
+            # Don't skip installation if there are git deps.
+            if ! grep -q 'git' poetry.lock; then
+                echo "Skipping installation, as poetry.lock hasn't changed since last deploy." | indent
+
+                mcount "tool.poetry"
+                export SKIP_POETRY_INSTALL=1
+                export SKIP_PIP_INSTALL=1
+            fi
+        fi
+    fi
+fi
+
+
+if [ ! "$SKIP_POETRY_INSTALL" ]; then
+    # poetry support (Generate requirements.txt with poetry).
+    if [[ -f pyproject.toml ]]; then
+        # Measure that we're using Pipenv.
+        mcount "tool.poetry"
+
+        # Skip pip install, later.
+        export SKIP_PIP_INSTALL=1
+
+        # Set Pip env vars
+        # This reads certain environment variables set on the Heroku app config
+        # and makes them accessible to the pip install process.
+        #
+        # PIP_EXTRA_INDEX_URL allows for an alternate pypi URL to be used.
+        if [[ -r "$ENV_DIR/PIP_EXTRA_INDEX_URL" ]]; then
+            PIP_EXTRA_INDEX_URL="$(cat "$ENV_DIR/PIP_EXTRA_INDEX_URL")"
+            export PIP_EXTRA_INDEX_URL
+            mcount "buildvar.PIP_EXTRA_INDEX_URL"
+        fi
+
+        POETRY_VERSION='1.1.11'
+
+        # Install poetry.
+        /app/.heroku/python/bin/pip install "poetry==${PIPENV_VERSION}" --upgrade --upgrade-strategy only-if-needed &> /dev/null
+
+        # Install the test dependencies, for CI.
+        if [ "$INSTALL_TEST" ]; then
+            puts-step "Installing test dependencies"
+            /app/.heroku/python/bin/poetry install --dev --system --deploy 2>&1 | cleanup | indent
+
+        # Install the dependencies.
+        elif [[ ! -f poetry.lock ]]; then
+            puts-step "Installing dependencies with poetry ${POETRY_VERSION}"
+            /app/.heroku/python/bin/poetry install --system --skip-lock 2>&1 | indent
+
+        else
+            sed -e 's/^-e //' <(/app/.heroku/python/bin/poetry export --without-hashes --with-credentials) > requirements.txt
+            cp requirements.txt .heroku/python/requirements-declared.txt
+            openssl dgst -sha256 poetry.lock > .heroku/python/poetry.lock.sha256
+
+            puts-step "Installing dependencies with poetry ${POETRY_VERSION}"
+            /app/.heroku/python/bin/poetry install --system --deploy 2>&1 | indent
+        fi
+    fi
+else
+    export SKIP_PIP_INSTALL=1
+    sed -e 's/^-e //' <(/app/.heroku/python/bin/poetry export --without-hashes --with-credentials) > requirements.txt
+fi

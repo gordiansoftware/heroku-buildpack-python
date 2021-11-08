@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+# Detect Python-version with poetry.
+
+if [[ -f $BUILD_DIR/pyproject.toml ]]; then
+
+    if [[ ! -f $BUILD_DIR/runtime.txt ]]; then
+        if [[ ! -f $BUILD_DIR/poetry.lock ]]; then
+            puts-warn "No 'poetry.lock' found! We recommend you commit this into your repository."
+        fi
+        if [[ -f $BUILD_DIR/poetry.lock ]]; then
+            # Ignore unused env var warning since this is used by bin/compile.
+            # shellcheck disable=2034
+            PYTHON_VERSION_SOURCE='poetry.lock'
+            set +e
+
+            PYTHON="$(sed -n -e '/^\[metadata\]/,/^\[/p' $BUILD_DIR/poetry.lock | sed -n -e 's/^python-versions\s*=\s*//p' | tr -d \"\')"
+            if [[ "$PYTHON" != "null" ]]; then
+                echo "python-$PYTHON" > "$BUILD_DIR/runtime.txt"
+            fi
+            set -e
+
+            if [[ "$PYTHON" == "null" ]]; then
+                PYTHON="$(sed -n -e '/^\[metadata\]/,/^\[/p' $BUILD_DIR/poetry.lock | sed -n -e 's/^python-versions\s*=\s*//p' | tr -d \"\')"
+                if [ "$PYTHON" = 2.7 ]; then
+                    echo "$LATEST_27" > "$BUILD_DIR/runtime.txt"
+                fi
+                if [ "$PYTHON" = 3.6 ]; then
+                    echo "$LATEST_36" > "$BUILD_DIR/runtime.txt"
+                fi
+                if [ "$PYTHON" = 3.7 ]; then
+                    echo "$LATEST_37" > "$BUILD_DIR/runtime.txt"
+                fi
+                if [ "$PYTHON" = 3.8 ]; then
+                    echo "$LATEST_38" > "$BUILD_DIR/runtime.txt"
+                fi
+                if [ "$PYTHON" = 3.9 ]; then
+                    echo "$LATEST_39" > "$BUILD_DIR/runtime.txt"
+                fi
+                if [ "$PYTHON" = "3.10" ]; then
+                    echo "$LATEST_310" > "$BUILD_DIR/runtime.txt"
+                fi
+            fi
+
+
+        fi
+    fi
+fi
