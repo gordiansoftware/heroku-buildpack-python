@@ -54,12 +54,12 @@ if [ ! "$SKIP_POETRY_INSTALL" ]; then
         # Install the test dependencies, for CI.
         if [ "$INSTALL_TEST" ]; then
             puts-step "Installing test dependencies"
-            /app/.heroku/python/bin/poetry install --dev --system --deploy 2>&1 | cleanup | indent
+            /app/.heroku/python/bin/poetry install --with-dev 2>&1 | cleanup | indent
 
         # Install the dependencies.
         elif [[ ! -f poetry.lock ]]; then
             puts-step "Installing dependencies with poetry ${POETRY_VERSION}"
-            /app/.heroku/python/bin/poetry install --system --skip-lock 2>&1 | indent
+            /app/.heroku/python/bin/poetry install --no-dev 2>&1 | indent
 
         else
             sed -e 's/^-e //' <(/app/.heroku/python/bin/poetry export --without-hashes --with-credentials) > requirements.txt
@@ -67,7 +67,7 @@ if [ ! "$SKIP_POETRY_INSTALL" ]; then
             openssl dgst -sha256 poetry.lock > .heroku/python/poetry.lock.sha256
 
             puts-step "Installing dependencies with poetry ${POETRY_VERSION}"
-            /app/.heroku/python/bin/poetry install --system --deploy 2>&1 | indent
+            /app/.heroku/python/bin/poetry install --no-dev 2>&1 | indent
         fi
     fi
 else
